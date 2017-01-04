@@ -6,6 +6,44 @@
 import psycopg2
 
 
+# TODO: add suport to querys with params
+class DB:
+
+    def __init__(self, db_con_str="dbname=tournament"):
+        """
+        Creates a database connection with the connection string provided
+        :param str db_con_str: Contains the database connection string, with a
+        default value when no argument is passed to the parameter
+        """
+        self.conn = psycopg2.connect(db_con_str)
+
+    def cursor(self):
+        """
+        Returns the current cursor of the database
+        """
+        return self.conn.cursor()
+
+    def execute(self, sql_query_string, and_close=False):
+        """
+        Executes SQL queries
+        :param str sql_query_string: Contain the query string to be executed
+        :param bool and_close: If true, closes the database connection after
+        executing and commiting the SQL Query
+        """
+        cursor = self.cursor()
+        cursor.execute(sql_query_string)
+        if and_close:
+            self.conn.commit()
+            self.close()
+        return {"conn": self.conn, "cursor": cursor if not and_close else None}
+
+    def close(self):
+        """
+        Closes the current database connection
+        """
+        return self.conn.close()
+
+
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
     return psycopg2.connect("dbname=tournament")
@@ -13,41 +51,23 @@ def connect():
 
 def deleteMatches():
     """Remove all the match records from the database."""
-    db = connect()
-    cur = db.cursor()
-    cur.execute("DELETE FROM match")
 
-    db.commit()
-
-    cur.close()
-    db.close()
+    DB().execute("DELETE FROM match;", True)
 
 
 def deletePlayers():
     """Remove all the player records from the database."""
-    db = connect()
-    cur = db.cursor()
-    cur.execute("DELETE FROM player")
 
-    db.commit()
-
-    cur.close()
-    db.close()
+    DB().execute("DELETE FROM player;", True)
 
 
 def countPlayers():
     """Returns the number of players currently registered."""
-    db = connect()
-    cur = db.cursor()
-    cur.execute("SELECT count(*) FROM player;")
     # The cursor returns a tuple, the data we want is in the first element
-    num_players = cur.fetchone()[0]
-    db.commit()
-
-    cur.close()
-    db.close()
-
-    return num_players
+    conn = DB().execute("SELECT count(*) FROM player;")
+    num_players = conn['cursor'].fetchone()
+    conn['conn'].close()
+    return num_players[0]
 
 
 def registerPlayer(name):
@@ -82,16 +102,9 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    db = connect()
-    cur = db.cursor()
-    cur.execute("SELECT w.id, w.name, w.total as wins, m.total as matches FROM total_wins as w, total_matches as m WHERE w.id = m.id ORDER BY w.total;")  # NOQA
-
-    result = cur.fetchall()
-
-    db.commit()
-
-    cur.close()
-    db.close()
+    conn = DB().execute("SELECT * from player_standing;")
+    result = conn['cursor'].fetchall()
+    conn['conn'].close()
 
     return result
 
@@ -105,7 +118,8 @@ def reportMatch(winner, loser):
     """
     db = connect()
     cur = db.cursor()
-    cur.execute("INSERT INTO match (winner, looser, tournament) VALUES (%s, %s, 1);", (winner, loser))  # NOQA
+    cur.execute("INSERT INTO match (winner, looser) VALUES (%s, %s);",
+                (winner, loser))
 
     db.commit()
 

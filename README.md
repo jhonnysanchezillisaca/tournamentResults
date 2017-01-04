@@ -22,5 +22,9 @@ To run this project you need to have installed VirtualBox and Vagrant.
 
 Once started the vagrant machine, go to ``/vagrant/tournament/`` directory.
 
-To run the tests simply type the following code:
+To create and connect to the database  and create the database schema you must enter to psql console with the command ``$ psql``. In there type ``\i tournament.sql``.
+
+To populate the schema with some data type ``$ \i data.sql``
+
+To run the tests type the following code:
 `` $ python tournament_test.py ``
