@@ -13,7 +13,7 @@ The project is composed of four files:
 
 - ``tournament.py``: contains the code of the program that controls the logic of the tournament.
 - ``tournament.sql``: contains the database schema.
-- ``tournament_test.py``: contains unit tests.
+- ``tournament_test.py``: contains unit tests (provided by Udacity).
 - ``data.sql``: contains SQL code to populate the DB.
 
 ## Installation and use
